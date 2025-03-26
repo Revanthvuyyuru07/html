@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Color Wood Sort Puzzle</title>
+    <style>
+      body {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-color: #f4f1de;
+      }
+      .game-container {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 20px;
+      }
+      .column {
+        width: 100px;
+        height: 300px;
+        background-color: #8b5a2b;
+        border-radius: 10px;
+        padding: 5px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        align-items: center;
+        position: relative;
+      }
+      .block {
+        width: 80px;
+        height: 50px;
+        border-radius: 5px;
+        margin: 5px 0;
+        cursor: grab;
+        transition: transform 0.2s ease-in-out;
+        position: relative;
+        z-index: 1;
+      }
+      .red {
+        background-color: #e63946;
+      }
+      .blue {
+        background-color: #457b9d;
+      }
+      .green {
+        background-color: #2a9d8f;
+      }
+      .yellow {
+        background-color: #f4a261;
+      }
+      .dragging {
+        transform: scale(1.1);
+        z-index: 10;
+      }
+      .hidden {
+        display: none;
+      }
+      button {
+        padding: 10px 20px;
+        font-size: 16px;
+        background-color: #28a745;
+        color: white;
+        border: none;
+        cursor: pointer;
+        border-radius: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="game" class="game-container"></div>
+
+    <button id="nextButton" class="hidden" onclick="nextLevel()">Next</button>
+
+    <script>
+      let colors = ["red", "blue", "yellow", "green"];
+      let level = 1;
+
+      function allowDrop(event) {
+        event.preventDefault();
+      }
+
+      function drag(event) {
+        event.dataTransfer.setData("text", event.target.id);
+        event.target.classList.add("dragging");
+      }
+
+      function drop(event) {
+        event.preventDefault();
+        let blockId = event.dataTransfer.getData("text");
+        let draggedBlock = document.getElementById(blockId);
+        let column = event.target.closest(".column");
+
+        draggedBlock.classList.remove("dragging");
+
+        if (column && column.childElementCount < 4) {
+          column.appendChild(draggedBlock); // Ensures block lands at the bottom
+          checkWin();
+        }
+      }
+
+      function checkWin() {
+        let columns = document.querySelectorAll(".column");
+        let isWin = Array.from(columns).every((column) => {
+          let blocks = column.querySelectorAll(".block");
+          if (blocks.length === 0) return true;
+          let firstColor = blocks[0].classList[1];
+          return Array.from(blocks).every((block) =>
+            block.classList.contains(firstColor)
+          );
+        });
+
+        if (isWin) {
+          document.getElementById("nextButton").classList.remove("hidden");
+        }
+      }
+
+      function nextLevel() {
+        alert(`🎉 Level ${level} completed! On to the next level! 🚀`);
+        level++;
+        generateGame();
+        document.getElementById("nextButton").classList.add("hidden");
+      }
+
+      function generateGame() {
+        let gameContainer = document.getElementById("game");
+        gameContainer.innerHTML = "";
+
+        let blockCount = 4;
+        let blocks = [];
+
+        for (let i = 0; i < blockCount; i++) {
+          for (let j = 0; j < blockCount; j++) {
+            let colorIndex = i % 2 === 0 ? j : blockCount - j - 1;
+            let block = `<div class="block ${colors[colorIndex]}" draggable="true" ondragstart="drag(event)" ondragend="event.target.classList.remove('dragging')"></div>`;
+            blocks.push(block);
+          }
+        }
+
+        for (let i = 0; i < 4; i++) {
+          let columnHTML = `<div class="column" ondrop="drop(event)" ondragover="allowDrop(event)">`;
+          for (let j = 0; j < blockCount; j++) {
+            columnHTML += blocks.shift();
+          }
+          columnHTML += `</div>`;
+          gameContainer.innerHTML += columnHTML;
+        }
+
+        gameContainer.innerHTML += `<div class="column" ondrop="drop(event)" ondragover="allowDrop(event)"></div>`;
+
+        document.querySelectorAll(".block").forEach((block, index) => {
+          block.id = "block" + index;
+        });
+      }
+
+      generateGame();
+    </script>
+  </body>
+</html>
